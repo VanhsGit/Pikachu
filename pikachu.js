@@ -82,7 +82,10 @@ board.style.width = boardWidth + "px";
 board.style.height = boardHeight + "px";
 
 function resizeBoard() {
-  const availableWidth = Math.max(1, window.innerWidth - 16);
+  const forcedLandscape =
+    window.innerWidth <= 1024 && window.innerHeight > window.innerWidth;
+  const layoutWidth = forcedLandscape ? window.innerHeight : window.innerWidth;
+  const availableWidth = Math.max(1, layoutWidth - 16);
   const scale = Math.min(1, availableWidth / boardWidth);
 
   board.style.transform = `scale(${scale})`;
