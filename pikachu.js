@@ -165,11 +165,11 @@ const initialMusicSource =
 // (hoặc sửa thành đúng đường dẫn của bạn) rồi thêm tên file vào mảng này.
 const backgroundMusicPlaylist = [
   initialMusicSource,
-  "dimejack1.mp3",
-  "dimejack2.mp3",
-  "dimejack3.mp3",
-  "dimejack4.mp3",
-  "dimejack5.mp3",
+  "sound/dimejack1.mp3",
+  "sound/dimejack2.mp3",
+  "sound/dimejack3.mp3",
+  "sound/dimejack4.mp3",
+  "sound/dimejack5.mp3",
 ];
 let currentMusicIndex = -1;
 
