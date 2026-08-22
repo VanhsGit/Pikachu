@@ -645,4 +645,228 @@ body {
   width: 18px;
 }
 
+@media (max-width: 700px), (max-width: 1024px) and (orientation: landscape) {
+  html,
+  body {
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  #soundButton img {
+    width: 48px;
+    height: 48px;
+    margin: 10px;
+  }
+
+  .header {
+    height: 76px;
+    align-items: center;
+    padding: 0 8px;
+  }
+
+  .header .option {
+    display: flex;
+    margin-left: 0;
+    gap: 8px;
+  }
+
+  .header i {
+    font-size: 22px;
+    margin: 0;
+  }
+
+  .header .numHelp,
+  .header .numReload {
+    top: 12px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 11px;
+  }
+
+  .header .numHelp {
+    left: 36px;
+  }
+
+  .header .numReload {
+    left: 73px;
+  }
+
+  .header .timeline {
+    flex: 1;
+    min-width: 70px;
+    height: 18px;
+    margin: 0 10px;
+    border-radius: 9px;
+  }
+
+  .header .right_header {
+    position: relative;
+    width: auto;
+    height: auto;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .header .right_header span {
+    position: static;
+    transform: none;
+    font-size: 16px;
+  }
+
+  .header .right_header span.score {
+    transform: none;
+  }
+
+  .container {
+    width: 100%;
+    top: 0;
+    left: 0;
+    transform: none;
+  }
+
+  .container .board {
+    margin: 8px auto;
+  }
+
+  .board_guide,
+  .board_pause,
+  .board_lose,
+  .board_win,
+  .opacity_bgk0 .infBoard {
+    width: calc(100% - 24px);
+    max-width: none;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    top: 72px;
+  }
+
+  .board_guide {
+    height: calc(100vh - 110px);
+    overflow-y: auto;
+    padding: 14px;
+  }
+
+  .board_guide h1,
+  .board_pause h1,
+  .board_lose h1,
+  .board_win h1,
+  .opacity_bgk0 .infBoard h1 {
+    font-size: 24px;
+  }
+
+  .board_guide .main_guide span {
+    line-height: 20px;
+    font-size: 14px;
+  }
+
+  .board_guide .main_guide img {
+    max-width: 42%;
+    height: auto;
+    margin: 6px;
+  }
+
+  .board_guide button {
+    right: 12px;
+    bottom: 12px;
+    width: 92px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .board_pause {
+    height: 190px;
+    padding: 28px 12px;
+  }
+
+  .board_pause .main_pause i,
+  .board_lose i {
+    margin: 10px 22px;
+    font-size: 28px;
+  }
+
+  .board_win {
+    height: 240px;
+    padding: 55px 10px;
+    font-size: 18px;
+    overflow: hidden;
+  }
+
+  .board_win img.left,
+  .board_win img.right {
+    width: 150px;
+    top: 0;
+  }
+
+  .board_win img.left {
+    left: -110px;
+  }
+
+  .board_win img.right {
+    right: -110px;
+  }
+
+  .board_win img.top {
+    width: 170px;
+    top: -52px;
+  }
+
+  .board_level {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 20px;
+    width: auto;
+  }
+
+  .board_level .levels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .board_level .levels button {
+    width: 100%;
+    margin: 0;
+  }
+
+  .interface button {
+    left: 50%;
+  }
+
+  .interface button.btn_start {
+    bottom: 100px;
+  }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
+  body::before {
+    content: "Vui lòng xoay ngang thiết bị";
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: #6b3f16 url("imgPikachu/bgk_start4.jpg") center / cover;
+    color: white;
+    font-family: "Courier New", monospace;
+    font-size: clamp(20px, 5vw, 32px);
+    font-weight: 700;
+    text-align: center;
+  }
+}
+
+@media (max-width: 1024px) and (orientation: landscape) {
+  .container {
+    width: 100%;
+    left: 0;
+    transform: none;
+  }
+
+  .container .board {
+    margin-top: 8px;
+  }
+}
+
 /*# sourceMappingURL=style.css.map */

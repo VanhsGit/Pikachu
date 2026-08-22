@@ -5,11 +5,12 @@ const imagePaths = Array.from(
   (_, i) => `./imgPikachu/${i + 1}.png`
 );
 
-// 100 level; mỗi level sử dụng ngẫu nhiên một trong 6 kiểu chơi ban đầu.
+// 100 level; mỗi kiểu chơi được dùng trong 15 level liên tiếp.
 const TOTAL_LEVELS = 100;
-const ORIGINAL_LEVEL_TYPES = 6;
+const TOTAL_LEVEL_TYPES = 6;
+const LEVELS_PER_TYPE = 15;
 const GAME_PROGRESS_STORAGE_KEY = "pikachuGameProgress";
-const LEVEL_TYPES_STORAGE_KEY = "pikachuLevelTypes";
+const LEVEL_TYPES_STORAGE_KEY = "pikachuLevelTypes_v2";
 
 function getStoredJson(key, fallbackValue) {
   try {
@@ -29,14 +30,20 @@ function setStoredJson(key, value) {
   }
 }
 
+function createLevelTypes() {
+  return Array.from({ length: TOTAL_LEVELS }, (_, index) =>
+    Math.min(
+      TOTAL_LEVEL_TYPES,
+      Math.floor(index / LEVELS_PER_TYPE) + 1
+    )
+  );
+}
+
 const storedLevelTypes = getStoredJson(LEVEL_TYPES_STORAGE_KEY, null);
 const levelTypes =
   Array.isArray(storedLevelTypes) && storedLevelTypes.length === TOTAL_LEVELS
     ? storedLevelTypes
-    : Array.from(
-        { length: TOTAL_LEVELS },
-        () => Math.floor(Math.random() * ORIGINAL_LEVEL_TYPES) + 1
-      );
+    : createLevelTypes();
 setStoredJson(LEVEL_TYPES_STORAGE_KEY, levelTypes);
 
 function getSavedGameProgress() {
@@ -59,15 +66,37 @@ function saveGameProgress() {
 }
 
 // số hàng và số cột qui định
-let numCols = 20;
-let numRows = 16;
+const isPhone = window.innerWidth <= 900;
+const isTablet = window.innerWidth <= 1024;
+let numCols = isPhone ? 16 : isTablet ? 20 : 20;
+let numRows = isPhone ? 6 : isTablet ? 8 : 16;
 
 // Lấy ra board
 const board = document.querySelector(".board");
+const boardContainer = document.querySelector(".container");
+const boardWidth = numCols * 48;
+const boardHeight = numRows * 48;
 
 // thiết lập lại kích thước của board khi biết số hàng và cột
-board.style.width = numCols * 48 + "px";
-board.style.height = numRows * 48 + "px";
+board.style.width = boardWidth + "px";
+board.style.height = boardHeight + "px";
+
+function resizeBoard() {
+  const availableWidth = Math.max(1, window.innerWidth - 16);
+  const scale = Math.min(1, availableWidth / boardWidth);
+
+  board.style.transform = `scale(${scale})`;
+  board.style.transformOrigin = "top left";
+  board.style.marginLeft = `${Math.max(
+    0,
+    (boardContainer.clientWidth - boardWidth * scale) / 2
+  )}px`;
+  const containerPadding = window.innerWidth <= 1024 ? 16 : 40;
+  boardContainer.style.height = `${boardHeight * scale + containerPadding}px`;
+}
+
+window.addEventListener("resize", resizeBoard);
+resizeBoard();
 
 // Tạo và thêm các div vào trong board
 for (let row = 1; row <= numRows; row++) {
@@ -161,6 +190,14 @@ function playRandomBackgroundMusic() {
   }
 }
 
+function requestLandscapeOrientation() {
+  if (screen.orientation?.lock) {
+    screen.orientation.lock("landscape").catch(() => {
+      // Một số trình duyệt chỉ cho phép khóa hướng khi đang fullscreen.
+    });
+  }
+}
+
 // bật tắt âm thanh nền qua icon
 soundButton.addEventListener("click", function () {
   isMuted = !isMuted;
@@ -209,6 +246,7 @@ let timeline = document.querySelector(".timeline");
 let currentWidth = parseFloat(window.getComputedStyle(timeline).width);
 let targetWidth = 0; // giữ giá trị hiện tại của timeline sau khi update (-1px)
 btn_start.addEventListener("click", function () {
+  requestLandscapeOrientation();
   soundBtn.play();
   if (currentMusicIndex === -1) {
     playRandomBackgroundMusic();
