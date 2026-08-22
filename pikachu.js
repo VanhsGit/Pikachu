@@ -69,7 +69,7 @@ function saveGameProgress() {
 const isPhone = window.innerWidth <= 900;
 const isTablet = window.innerWidth <= 1024;
 let numCols = isPhone ? 16 : isTablet ? 20 : 20;
-let numRows = isPhone ? 6 : isTablet ? 8 : 16;
+let numRows = isPhone ? 6 : isTablet ? 7 : 16;
 
 // Lấy ra board
 const board = document.querySelector(".board");
