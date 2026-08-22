@@ -5,6 +5,31 @@ const imagePaths = Array.from(
   (_, i) => `./imgPikachu/${i + 1}.png`
 );
 
+function shuffle(items) {
+  for (let index = items.length - 1; index > 0; index--) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
+  }
+  return items;
+}
+
+function createPairedPieces(pairCount) {
+  const pieces = [];
+  for (let pairIndex = 0; pairIndex < pairCount; pairIndex++) {
+    const imagePath = imagePaths[pairIndex % imagePaths.length];
+    pieces.push(imagePath, imagePath);
+  }
+  return shuffle(pieces);
+}
+
+function createPairCounts(total) {
+  const counts = Array(imagePaths.length).fill(0);
+  for (let pairIndex = 0; pairIndex < total / 2; pairIndex++) {
+    counts[pairIndex % imagePaths.length] += 2;
+  }
+  return counts;
+}
+
 // 100 level; mỗi kiểu chơi được dùng trong 15 level liên tiếp.
 const TOTAL_LEVELS = 100;
 const TOTAL_LEVEL_TYPES = 6;
@@ -101,7 +126,6 @@ function resizeBoard() {
 window.addEventListener("resize", resizeBoard);
 resizeBoard();
 
-// Tạo và thêm các div vào trong board
 for (let row = 1; row <= numRows; row++) {
   for (let col = 1; col <= numCols; col++) {
     const cell = document.createElement("div");
@@ -111,58 +135,45 @@ for (let row = 1; row <= numRows; row++) {
     board.appendChild(cell);
   }
 }
-//Mảng các ô trong board
+
 let cells = document.querySelectorAll(".cell");
 function initializeBoardUI() {
   let leftOffset = 0;
   let topOffset = 0;
   let cellCount = 0;
-  // xếp các vị trí cho thẻ khi dùng absoluted
-  cells.forEach((cell, i) => {
+  cells.forEach((cell) => {
     cell.style.left = leftOffset + "px";
     cell.style.top = topOffset + "px";
-    leftOffset += 48; // Tăng giá trị left thêm 48px
+    leftOffset += 48;
     cellCount++;
     if (cellCount >= numCols) {
-      // Nếu đã vẽ đủ số cột trong hàng
-      topOffset += 48; // Di chuyển xuống dòng mới
-      leftOffset = 0; // Reset left về 0
-      cellCount = 0; // Reset số lượng ô đã vẽ
+      topOffset += 48;
+      leftOffset = 0;
+      cellCount = 0;
     }
   });
 }
 
-// hàm chuyển đổi từ vị trí trên ma trận thành các ô trên board
 function convertMatrixToCell(x, y) {
-  // x, y là tọa độ tương ứng
   return cells[numCols * (x - 1) + (y - 1)];
 }
-// chuyển đổi về ma trận
+
 let matrix = [];
-for (let i = 0; i < numRows + 2; i++) {
-  matrix[i] = [];
-  for (let j = 0; j < numCols + 2; j++) {
-    if (i === 0 || i === numRows + 1 || j === 0 || j === numCols + 1) {
-      matrix[i][j] = "0";
-    } else {
-      matrix[i][j] = convertMatrixToCell(i, j).textContent;
-    }
+for (let row = 0; row < numRows + 2; row++) {
+  matrix[row] = [];
+  for (let col = 0; col < numCols + 2; col++) {
+    matrix[row][col] =
+      row === 0 || row === numRows + 1 || col === 0 || col === numCols + 1
+        ? "0"
+        : convertMatrixToCell(row, col).textContent;
   }
 }
-console.log(matrix);
 
-// các đối tượng liên quan đến âm thanh nền trong game
 let soundButton = document.getElementById("soundButton");
 let volumeIcon = document.getElementById("volumeIcon");
 let isMuted = false;
 let audioBackground = document.getElementById("myAudio");
-const initialMusicSource =
-  audioBackground.querySelector("source")?.getAttribute("src") ||
-  audioBackground.getAttribute("src") ||
-  "dimejack0.mp3";
-
-// Danh sách nhạc nền. Hãy đặt các file mp3 cùng thư mục với file HTML
-// (hoặc sửa thành đúng đường dẫn của bạn) rồi thêm tên file vào mảng này.
+const initialMusicSource = audioBackground.getAttribute("src") || "sound/dimejack0.mp3";
 const backgroundMusicPlaylist = [
   initialMusicSource,
   "sound/dimejack1.mp3",
@@ -174,124 +185,95 @@ const backgroundMusicPlaylist = [
 let currentMusicIndex = -1;
 
 function playRandomBackgroundMusic() {
-  if (backgroundMusicPlaylist.length === 0) return;
-
   let nextIndex = Math.floor(Math.random() * backgroundMusicPlaylist.length);
   if (backgroundMusicPlaylist.length > 1) {
     while (nextIndex === currentMusicIndex) {
       nextIndex = Math.floor(Math.random() * backgroundMusicPlaylist.length);
     }
   }
-
   currentMusicIndex = nextIndex;
   audioBackground.src = backgroundMusicPlaylist[currentMusicIndex];
   audioBackground.currentTime = 0;
-  if (!isMuted) {
-    audioBackground.play().catch(() => {
-      // Trình duyệt có thể chặn autoplay cho tới lần tương tác đầu tiên.
-    });
-  }
+  if (!isMuted) audioBackground.play().catch(() => {});
 }
 
 function requestLandscapeOrientation() {
   if (screen.orientation?.lock) {
-    screen.orientation.lock("landscape").catch(() => {
-      // Một số trình duyệt chỉ cho phép khóa hướng khi đang fullscreen.
-    });
+    screen.orientation.lock("landscape").catch(() => {});
   }
 }
 
-// bật tắt âm thanh nền qua icon
 soundButton.addEventListener("click", function () {
   isMuted = !isMuted;
   if (isMuted) {
     audioBackground.pause();
     volumeIcon.classList.add("muted");
   } else {
-    audioBackground.play();
+    audioBackground.play().catch(() => {});
     volumeIcon.classList.remove("muted");
   }
 });
+audioBackground.addEventListener("ended", playRandomBackgroundMusic);
+audioBackground.volume = 0.3;
 
-// phát lại audio khi đã kết thúc
-audioBackground.addEventListener("ended", function () {
-  playRandomBackgroundMusic();
-});
-audioBackground.volume = 0.3; // setup âm lượng nền
-
-// Âm thanh của button và các đối tượng trong game
-let soundBtn = document.querySelector(".soundBtn"); // nút play
-let soundCell = document.querySelector(".soundCell"); // các thẻ chọn
-let soundWrongChoose = document.querySelector(".wrongChoose"); // khi chọn sai
-let soundTrueChoose = document.querySelector(".trueChoose"); // khi chọn đúng
-let victory = document.querySelector(".victory"); // khi chiến thắng
+let soundBtn = document.querySelector(".soundBtn");
+let soundCell = document.querySelector(".soundCell");
+let soundWrongChoose = document.querySelector(".wrongChoose");
+let soundTrueChoose = document.querySelector(".trueChoose");
+let victory = document.querySelector(".victory");
 soundTrueChoose.volume = 0.5;
 soundWrongChoose.volume = 0.5;
 
-// Bắt đầu game bằng nút play
-let interface = document.querySelector(".interface"); // giao diện nền trước khi bắt đầu game
-let board_guide = document.querySelector(".board_guide"); // bảng thông tin và hướng dẫn trò chơi
-let board_pause = document.querySelector(".board_pause"); // bảng tạm dừng
-let board_lose = document.querySelector(".board_lose"); // bảng điểm sau khi hết thời gian chơi
-let board_win = document.querySelector(".board_win"); // bảng thông báo chiến thắng trò chơi
-let btnClose = board_guide.querySelector("button"); // nút thoát khỏi bảng hướng dẫn
-let opacity_bgk = document.querySelector(".opacity_bgk"); // nền phụ giúp làm nổi bậc bảng hướng dẫn
-let opacity_bgk1 = document.querySelector(".opacity_bgk1"); // nền phụ giúp làm nổi bậc bảng điểm/ bảng pause
-let opacity_bgk2 = document.querySelector(".opacity_bgk2"); // nền phụ giúp làm nổi bậc bảng win game
-let btn_start = document.querySelector(".btn_start"); // nút play bắt đầu khởi tạo game
-let btn_guide = document.querySelector(".btn_guide"); // nút guide đê mở bảng thông tin và hướng dẫn trò chơi
-let board_guide_lv4 = document.querySelector(".board_guide_lv4"); // bảng thông tin về level hiện tại
-let board_guide_lv5 = document.querySelector(".board_guide_lv5"); // bảng thông tin về level hiện tại
-let board_guide_lv6 = document.querySelector(".board_guide_lv6"); // bảng thông tin về level hiện tại
+let interface = document.querySelector(".interface");
+let board_guide = document.querySelector(".board_guide");
+let board_pause = document.querySelector(".board_pause");
+let board_lose = document.querySelector(".board_lose");
+let board_win = document.querySelector(".board_win");
+let btnClose = board_guide.querySelector("button");
+let opacity_bgk = document.querySelector(".opacity_bgk");
+let opacity_bgk1 = document.querySelector(".opacity_bgk1");
+let opacity_bgk2 = document.querySelector(".opacity_bgk2");
+let btn_start = document.querySelector(".btn_start");
+let btn_guide = document.querySelector(".btn_guide");
+let board_guide_lv4 = document.querySelector(".board_guide_lv4");
+let board_guide_lv5 = document.querySelector(".board_guide_lv5");
+let board_guide_lv6 = document.querySelector(".board_guide_lv6");
 let imgGuide = document.querySelector(".imgGuide");
-
 let timeline = document.querySelector(".timeline");
 let currentWidth = parseFloat(window.getComputedStyle(timeline).width);
-let targetWidth = 0; // giữ giá trị hiện tại của timeline sau khi update (-1px)
+let targetWidth = 0;
+
 btn_start.addEventListener("click", function () {
   requestLandscapeOrientation();
-  soundBtn.play();
-  if (currentMusicIndex === -1) {
-    playRandomBackgroundMusic();
-  } else {
-    audioBackground.play();
-  }
+  soundBtn.play().catch(() => {});
+  if (currentMusicIndex === -1) playRandomBackgroundMusic();
+  else audioBackground.play().catch(() => {});
   volumeIcon.classList.remove("muted");
   setTimeout(() => {
-    interface.style.display = "none"; // ẩn nền đi
-    initializeGame(); // hàm khởi tạo game
+    interface.style.display = "none";
+    initializeGame();
   }, 100);
 });
 btn_guide.addEventListener("click", function () {
-  soundBtn.play();
-  setTimeout(() => {
-    board_guide.style.display = "block";
-    opacity_bgk.style.display = "block";
-  }, 100);
+  soundBtn.play().catch(() => {});
+  board_guide.style.display = "block";
+  opacity_bgk.style.display = "block";
 });
 btnClose.addEventListener("click", function () {
-  soundBtn.play();
-  setTimeout(() => {
-    board_guide.style.display = "none";
-    opacity_bgk.style.display = "none";
-    if (interface.style.display == "none") {
-      board_pause.style.display = "block";
-    }
-  }, 100);
+  soundBtn.play().catch(() => {});
+  board_guide.style.display = "none";
+  opacity_bgk.style.display = "none";
+  if (interface.style.display === "none") board_pause.style.display = "block";
 });
-let infBoard = document.querySelector(".opacity_bgk0");
 
+let infBoard = document.querySelector(".opacity_bgk0");
 window.onclick = function (event) {
-  if (event.target == infBoard) {
-    infBoard.style.display = "none";
-  }
-  if (event.target == opacity_bgk) {
+  if (event.target === infBoard) infBoard.style.display = "none";
+  if (event.target === opacity_bgk) {
     board_guide.style.display = "none";
     opacity_bgk.style.display = "none";
   }
-  if (event.target == imgGuide) {
-    imgGuide.style.display = "none";
-  }
+  if (event.target === imgGuide) imgGuide.style.display = "none";
 };
 
 // hàm ràng buộc điều kiện khi nào mới được reload nếu còn nhiều qá thì không reload
@@ -310,52 +292,31 @@ window.onclick = function (event) {
 //   //   } else {
 //   reRenderBoardIMG;
 //   //   }
-// }
-
-// hàm tìm kiếm cặp thẻ đầu tiên trong bảng để gợi ý
 function help() {
-  let currentRemainCell = [];
-  let foundPath = false;
-  cells.forEach((cell) => {
-    if (cell.style.visibility !== "hidden") {
-      currentRemainCell.push(cell);
-    }
-  });
-  for (let i = 0; i < currentRemainCell.length - 1; i++) {
-    if (foundPath) {
-      break;
-    }
-    for (let j = i + 1; j < currentRemainCell.length; j++) {
-      let x1 =
-        Math.floor(
-          (parseInt(currentRemainCell[i].getAttribute("id")) - 1) / numCols
-        ) + 1;
-      let y1 =
-        ((parseInt(currentRemainCell[i].getAttribute("id")) - 1) % numCols) + 1;
-      let x2 =
-        Math.floor(
-          (parseInt(currentRemainCell[j].getAttribute("id")) - 1) / numCols
-        ) + 1;
-      let y2 =
-        ((parseInt(currentRemainCell[j].getAttribute("id")) - 1) % numCols) + 1;
+  const remainingCells = Array.from(cells).filter(
+    (cell) => cell.style.visibility !== "hidden"
+  );
+  for (let firstIndex = 0; firstIndex < remainingCells.length - 1; firstIndex++) {
+    for (let secondIndex = firstIndex + 1; secondIndex < remainingCells.length; secondIndex++) {
+      const firstCell = remainingCells[firstIndex];
+      const secondCell = remainingCells[secondIndex];
+      const firstId = parseInt(firstCell.getAttribute("id"), 10) - 1;
+      const secondId = parseInt(secondCell.getAttribute("id"), 10) - 1;
+      const firstPosition = [Math.floor(firstId / numCols) + 1, (firstId % numCols) + 1];
+      const secondPosition = [Math.floor(secondId / numCols) + 1, (secondId % numCols) + 1];
       if (
-        currentRemainCell[i].style.backgroundImage ===
-          currentRemainCell[j].style.backgroundImage &&
-        findPath(x1, y1, x2, y2) !== null
+        firstCell.style.backgroundImage === secondCell.style.backgroundImage &&
+        findPath(...firstPosition, ...secondPosition) !== null
       ) {
-        console.log("found new path");
-        currentRemainCell[i].style.opacity = "0.6";
-        currentRemainCell[j].style.opacity = "0.6";
-        currentRemainCell[i].style.outline = "5px solid rgba(96, 231, 84, 0.8)";
-        currentRemainCell[j].style.outline = "5px solid rgba(96, 231, 84, 0.8)";
-        foundPath = true;
-        break;
+        firstCell.style.opacity = "0.6";
+        secondCell.style.opacity = "0.6";
+        firstCell.style.outline = "5px solid rgba(96, 231, 84, 0.8)";
+        secondCell.style.outline = "5px solid rgba(96, 231, 84, 0.8)";
+        return;
       }
     }
   }
-  if (!foundPath) {
-    reRenderBoardIMG();
-  }
+  reRenderBoardIMG();
 }
 // hàm thay đổi trạng thái khi click reload board khi đủ điều kiện
 function canReload() {
@@ -619,68 +580,57 @@ function checkWinEndGame() {
 }
 
 function handleCellClick(event) {
-  let clickedCell = event.target;
-  let level = getLevelType();
-  soundCell.play();
-  // tính toán tọa độ hàng và cột dựa trên ID của cell
-  // nên khi tăng level sẽ phải setup lại ID nếu ko sẽ sai toạ độ hàng và cột được click
-  let cellId = parseInt(clickedCell.getAttribute("id"));
-  let row = Math.floor((cellId - 1) / numCols) + 1;
-  let col = ((cellId - 1) % numCols) + 1;
-  // let row = (Math.floor((index) / numCols)) + 1;
-  // let col = ((index) % numCols) + 1;
+  const clickedCell = event.target;
+  const level = getLevelType();
+  soundCell.play().catch(() => {});
+  const cellId = parseInt(clickedCell.getAttribute("id"), 10);
+  const row = Math.floor((cellId - 1) / numCols) + 1;
+  const col = ((cellId - 1) % numCols) + 1;
   clickedCell.classList.toggle("clicked");
+
   if (firstClicked === null) {
     firstClicked = clickedCell;
     locateFirst = [row, col];
-    console.log(
-      "firstClicked :" + firstClicked.getAttribute("id") + "-" + locateFirst
-    );
-  } else {
-    let secondClicked = clickedCell;
-    let locateSecond = [row, col];
-    console.log(
-      "secondClicked :" + secondClicked.getAttribute("id") + "-" + locateSecond
-    );
-    if (
-      firstClicked !== secondClicked &&
-      firstClicked.style.backgroundImage === secondClicked.style.backgroundImage
-    ) {
-      // còn 1 điều kiện là phải có đường đi thõa 3 line nữa
-      switch (level) {
-        case 1:
-          checkTrue(firstClicked, secondClicked, locateFirst, locateSecond);
-          break;
-        case 2:
-          checkTrueLv2(firstClicked, secondClicked, locateFirst, locateSecond);
-          break;
-        case 3:
-          checkTrueLv3(firstClicked, secondClicked, locateFirst, locateSecond);
-          break;
-        case 4: // TH level 4 chưa hoàn thiện nên sẽ delay 1 level
-          checkTrueLv5(firstClicked, secondClicked, locateFirst, locateSecond);
-          break;
-        case 5:
-          checkTrueLv6(firstClicked, secondClicked, locateFirst, locateSecond);
-          break;
-        case 6:
-          checkTrueLv7(firstClicked, secondClicked, locateFirst, locateSecond);
-          break;
-        default:
-          break;
-      }
-      // checkTrueLv2(firstClicked, secondClicked, locateFirst, locateSecond)
-    } else {
-      firstClicked.classList.toggle("clicked");
-      secondClicked.classList.toggle("clicked");
-      soundWrongChoose.play();
-      if (level === 4 || level === 5 || level === 6) {
-        decreaseWidth();
-      }
-    }
-    firstClicked = null;
-    autoIncreaseLevel();
+    return;
   }
+
+  const secondClicked = clickedCell;
+  const locateSecond = [row, col];
+  if (
+    firstClicked !== secondClicked &&
+    firstClicked.style.backgroundImage === secondClicked.style.backgroundImage
+  ) {
+    switch (level) {
+      case 1:
+        checkTrue(firstClicked, secondClicked, locateFirst, locateSecond);
+        break;
+      case 2:
+        checkTrueLv2(firstClicked, secondClicked, locateFirst, locateSecond);
+        break;
+      case 3:
+        checkTrueLv3(firstClicked, secondClicked, locateFirst, locateSecond);
+        break;
+      case 4:
+        checkTrueLv4(firstClicked, secondClicked, locateFirst, locateSecond);
+        break;
+      case 5:
+        checkTrueLv5(firstClicked, secondClicked, locateFirst, locateSecond);
+        break;
+      case 6:
+        checkTrueLv7(firstClicked, secondClicked, locateFirst, locateSecond);
+        break;
+      default:
+        break;
+    }
+  } else {
+    firstClicked.classList.toggle("clicked");
+    secondClicked.classList.toggle("clicked");
+    soundWrongChoose.play().catch(() => {});
+    if (level === 4 || level === 5 || level === 6) decreaseWidth();
+  }
+
+  firstClicked = null;
+  autoIncreaseLevel();
 }
 
 // sự kiện click chọn các thẻ
@@ -699,7 +649,7 @@ function initializeBoardIMG() {
   // mảng tạm tạo dùng để xóa cái img đã đủ sl khi khởi tạo (tránh việc random lẻ hình)
   let imagePathsCopy = [];
 
-  let a = randomNumImgs(); // gán biến để cố định (ko bị random nhìu lần)
+  let a = createPairCounts(numRows * numCols);
   for (let i = 0; i < a.length; i++) {
     // chạy số phần tử trong mảng a (vì mảng a là mảng số lượng ảnh)
     for (let j = 0; j < a[i]; j++) {
@@ -774,32 +724,7 @@ function initializeBoardIMGOfLevel5(numTimeTag) {
     throw new Error("Số lượng Pokemon còn lại phải là số chẵn");
   }
 
-  let pieces = [];
-
-  // ==========================================
-  // 1. Thêm mỗi loại Pokemon ít nhất 1 cặp
-  // ==========================================
-  imagePaths.forEach((imagePath) => {
-    pieces.push(imagePath);
-    pieces.push(imagePath);
-  });
-
-  // Hiện tại:
-  // 42 loại * 2 = 84 pieces
-  let remainingNormalCells = normalCellCount - pieces.length;
-
-  // ==========================================
-  // 2. Random thêm từng CẶP cho đến khi đủ
-  // ==========================================
-  while (remainingNormalCells > 0) {
-    const randomIndex = Math.floor(Math.random() * imagePaths.length);
-    const imagePath = imagePaths[randomIndex];
-
-    pieces.push(imagePath);
-    pieces.push(imagePath);
-
-    remainingNormalCells -= 2;
-  }
+  let pieces = createPairedPieces(normalCellCount / 2);
 
   // ==========================================
   // 3. Thêm các thẻ plusTime
@@ -808,14 +733,7 @@ function initializeBoardIMGOfLevel5(numTimeTag) {
     pieces.push("./imgPikachu/plusTime.png");
   }
 
-  // ==========================================
-  // 4. Shuffle toàn bộ 320 pieces
-  // ==========================================
-  for (let i = pieces.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
-  }
+  shuffle(pieces);
 
   // Debug
   console.log("Total cells:", totalCells);
@@ -835,7 +753,9 @@ function reRenderBoardIMG1() {
   // mảng tạm tạo dùng để xóa cái img đã đủ sl khi khởi tạo (tránh việc random lẻ hình)
   let imagePathsCopy = [];
 
-  let a = randomNumImgs(); // gán biến để cố định (ko bị random nhiều lần)
+  let a = createPairCounts(
+    Array.from(cells).filter((cell) => cell.style.visibility !== "hidden").length
+  );
   for (let i = 0; i < a.length; i++) {
     for (let j = 0; j < a[i]; j++) {
       imagePathsCopy.push(imagePaths[i]);
