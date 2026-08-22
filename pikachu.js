@@ -574,9 +574,12 @@ function autoIncreaseLevel() {
 }
 
 function checkWinEndGame() {
-  victory.play();
+  victory.play().catch(() => {});
   opacity_bgk2.style.display = "block";
   board_win.style.display = "block";
+  board_win.classList.remove("win-show");
+  void board_win.offsetWidth;
+  board_win.classList.add("win-show");
 }
 
 function handleCellClick(event) {

@@ -455,6 +455,37 @@ body {
     transform: scale(1) translate(0, 0) rotate(0deg);
   }
 }
+@keyframes winPopup {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.65) rotate(-3deg);
+  }
+  70% {
+    transform: translateX(-50%) scale(1.06) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+}
+@keyframes winGlow {
+  0%, 100% {
+    box-shadow: 0 0 35px 12px rgba(255, 217, 0, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 75px 28px rgba(255, 255, 130, 0.95);
+  }
+}
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translateY(-20px) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(340px) rotate(540deg);
+  }
+}
 .board_win {
   display: none;
   width: 450px;
@@ -475,6 +506,34 @@ body {
   color: white;
   z-index: 1005;
   box-shadow: 0px 0px 100px 100px rgba(255, 217, 0, 0.8);
+}
+.board_win.win-show {
+  animation: winPopup 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both,
+    winGlow 1.5s ease-in-out 0.65s 2;
+}
+.board_win.win-show::before,
+.board_win.win-show::after {
+  content: "";
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  width: 10px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgb(248, 212, 7);
+  pointer-events: none;
+  animation: confettiFall 1.8s ease-out 0.35s infinite;
+  box-shadow: -115px 30px 0 rgb(1, 102, 185), -70px 8px 0 #ef476f,
+    -25px 55px 0 #38cb2b, 30px 18px 0 #ef476f, 75px 48px 0 rgb(1, 102, 185),
+    120px 5px 0 #38cb2b;
+}
+.board_win.win-show::after {
+  background: #ef476f;
+  animation-delay: 0.65s;
+  transform: translateX(20px);
+  box-shadow: -95px 60px 0 #38cb2b, -45px 20px 0 rgb(248, 212, 7),
+    10px 45px 0 rgb(1, 102, 185), 55px 10px 0 rgb(248, 212, 7),
+    105px 65px 0 #ef476f;
 }
 .board_win i {
   margin: 40px 40px;
