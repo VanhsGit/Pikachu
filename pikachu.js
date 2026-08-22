@@ -34,6 +34,8 @@ function createPairCounts(total) {
 const TOTAL_LEVELS = 100;
 const TOTAL_LEVEL_TYPES = 6;
 const LEVELS_PER_TYPE = 15;
+const LEVEL_TIME_SECONDS = 10 * 60;
+const FULL_TIMELINE_WIDTH = 450;
 const GAME_PROGRESS_STORAGE_KEY = "pikachuGameProgress";
 const LEVEL_TYPES_STORAGE_KEY = "pikachuLevelTypes_v2";
 
@@ -2511,7 +2513,7 @@ let imgPlusTime = document.querySelectorAll(".plusTime img");
 function increaseWidth() {
   // kiểm tra xem độ dài timeline đủ không, nếu không thì dừng timeline
   console.log("targetWidth + 10  : " + (targetWidth + 10));
-  console.log(targetWidth + 10 <= 450);
+  console.log(targetWidth + 10 <= FULL_TIMELINE_WIDTH);
   plusTime.style.display = "flex";
   imgPlusTime.forEach((img) => {
     img.style.animation = "plus 2s linear";
@@ -2522,14 +2524,14 @@ function increaseWidth() {
       img.style.animation = null;
     });
   }, 2000);
-  if (targetWidth + 20 <= 450) {
+  if (targetWidth + 20 <= FULL_TIMELINE_WIDTH) {
     console.log("plus timeline successful");
     targetWidth += 20;
     timeline.style.transition = "width 0.5s ease-in-out";
     timeline.style.width = targetWidth + "px";
   } else {
     console.log("plus timeline fail");
-    targetWidth += 450 - targetWidth;
+    targetWidth += FULL_TIMELINE_WIDTH - targetWidth;
     return;
   }
 }
@@ -2539,7 +2541,7 @@ function initializeTimeLine() {
   // Tính toán chiều dài hiện tại của .timeline
   // console.log('targetWidth:' + targetWidth)
   if (targetWidth == 0) {
-    targetWidth = 450;
+    targetWidth = FULL_TIMELINE_WIDTH;
   }
 
   // Dừng interval cũ trước khi tạo một interval mới
@@ -2547,14 +2549,7 @@ function initializeTimeLine() {
 
   // mỗi 1s set lại width cho timeline bằng targetWidth
   intervalID = setInterval(() => {
-    const levelType = getLevelType();
-    if (levelType === 4 || levelType === 5 || levelType === 6) {
-      targetWidth -= 3; // giảm 3px mỗi 1s
-    } else if (levelType === 2 || levelType === 3) {
-      targetWidth -= 2; // giảm 2px mỗi 1s
-    } else {
-      targetWidth -= 1; // giảm 1px mỗi 1s
-    }
+    targetWidth -= FULL_TIMELINE_WIDTH / LEVEL_TIME_SECONDS;
     if (!running) {
       clearInterval(intervalID); // Dừng interval
       return; // Kết thúc hàm
