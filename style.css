@@ -769,6 +769,21 @@ body {
     margin: 10px;
   }
 
+  #soundButton {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 58px;
+    height: 58px;
+    z-index: 1200;
+  }
+
+  #soundButton img {
+    width: 38px;
+    height: 38px;
+    margin: 8px 10px;
+  }
+
   .header {
     height: 76px;
     align-items: center;
@@ -812,9 +827,10 @@ body {
   }
 
   .header .right_header {
-    position: relative;
+    position: absolute;
+    right: 74px;
     width: auto;
-    height: auto;
+    height: 100%;
     gap: 4px;
     align-items: center;
   }
