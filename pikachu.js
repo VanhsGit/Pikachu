@@ -303,6 +303,7 @@ let imgGuide = document.querySelector(".imgGuide");
 let timeline = document.querySelector(".timeline");
 let currentWidth = parseFloat(window.getComputedStyle(timeline).width);
 let targetWidth = 0;
+timeline.style.display = "none";
 
 btn_start.addEventListener("click", function () {
   requestLandscapeOrientation();
@@ -2602,6 +2603,7 @@ function stopTimeLine() {
 // reset lại timeline khi chuyển level/ chơi lại game
 function resetTimeline() {
   targetWidth = 0;
+  timeline.style.display = "block";
   timeline.style.transition = "none"; // hủy transition
   timeline.style.width = currentWidth + "px"; // thiết lập lại chiều rộng ban đầu
 }
@@ -2687,6 +2689,8 @@ function initializeTimeLine() {
     }
     if (targetWidth < 2) {
       targetWidth = 0;
+      timeline.style.width = "0px";
+      timeline.style.display = "none";
       loseGame();
     }
   }, 1000); // mỗi giây lặp lại việc giảm kích thước của timeline
