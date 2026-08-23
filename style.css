@@ -804,7 +804,7 @@ body {
   }
 
   .header .timeline {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 70px;
     height: 18px;
     margin: 0 10px;

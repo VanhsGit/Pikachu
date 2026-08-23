@@ -608,6 +608,7 @@ function resetButtonLevel() {
       initializeScore();
       restoreBoard();
       resetTimeline();
+      running = true;
       initializeTimeLine();
       checkLevel();
       updateCellIds();
@@ -621,6 +622,7 @@ function setUpNextLevel() {
   initializeBoardUI();
   restoreBoard();
   resetTimeline();
+  running = true;
   initializeTimeLine();
   checkLevel();
   updateCellIds();
