@@ -30,6 +30,37 @@ function createPairCounts(total) {
   return counts;
 }
 
+function getBoardDimensions(level) {
+  const pairCount = Math.min(160, 10 + Math.floor((level - 1) * 1.5));
+  let totalCells = pairCount * 2;
+  const maxColumns = window.innerWidth <= 900 ? 16 : 20;
+  const possibleColumns = [];
+
+  while (totalCells <= 320) {
+    possibleColumns.length = 0;
+    for (let columns = 4; columns <= maxColumns; columns++) {
+      if (totalCells % columns === 0) possibleColumns.push(columns);
+    }
+    const widestColumns = possibleColumns[possibleColumns.length - 1];
+    const widestRows = widestColumns ? totalCells / widestColumns : Infinity;
+    if (possibleColumns.length > 0 && widestColumns / widestRows >= 0.75) {
+      break;
+    }
+    totalCells += 2;
+  }
+
+  const columns = possibleColumns.reduce((best, candidate) => {
+    const bestRows = totalCells / best;
+    const candidateRows = totalCells / candidate;
+    return Math.abs(candidate / candidateRows - 1.8) <
+      Math.abs(best / bestRows - 1.8)
+      ? candidate
+      : best;
+  }, possibleColumns[0] || 4);
+
+  return { columns, rows: totalCells / columns };
+}
+
 // 100 level; mỗi kiểu chơi được dùng trong 15 level liên tiếp.
 const TOTAL_LEVELS = 100;
 const TOTAL_LEVEL_TYPES = 6;
@@ -93,16 +124,15 @@ function saveGameProgress() {
 }
 
 // số hàng và số cột qui định
-const isPhone = window.innerWidth <= 900;
-const isTablet = window.innerWidth <= 1024;
-let numCols = isPhone ? 16 : isTablet ? 20 : 20;
-let numRows = isPhone ? 6 : isTablet ? 7 : 16;
+const initialBoardDimensions = getBoardDimensions(getSavedGameProgress().level);
+let numCols = initialBoardDimensions.columns;
+let numRows = initialBoardDimensions.rows;
 
 // Lấy ra board
 const board = document.querySelector(".board");
 const boardContainer = document.querySelector(".container");
-const boardWidth = numCols * 48;
-const boardHeight = numRows * 48;
+let boardWidth = numCols * 48;
+let boardHeight = numRows * 48;
 
 // thiết lập lại kích thước của board khi biết số hàng và cột
 board.style.width = boardWidth + "px";
@@ -123,6 +153,32 @@ function resizeBoard() {
   )}px`;
   const containerPadding = window.innerWidth <= 1024 ? 16 : 40;
   boardContainer.style.height = `${boardHeight * scale + containerPadding}px`;
+}
+
+function rebuildBoardForLevel(level) {
+  const dimensions = getBoardDimensions(level);
+  numCols = dimensions.columns;
+  numRows = dimensions.rows;
+  boardWidth = numCols * 48;
+  boardHeight = numRows * 48;
+
+  board.querySelectorAll(".cell").forEach((cell) => cell.remove());
+  board.style.width = boardWidth + "px";
+  board.style.height = boardHeight + "px";
+
+  for (let row = 1; row <= numRows; row++) {
+    for (let col = 1; col <= numCols; col++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.id = ((row - 1) * numCols + col).toString();
+      cell.textContent = "1";
+      board.appendChild(cell);
+    }
+  }
+
+  cells = document.querySelectorAll(".cell");
+  initializeBoardUI();
+  resizeBoard();
 }
 
 window.addEventListener("resize", resizeBoard);
@@ -231,6 +287,9 @@ let board_guide = document.querySelector(".board_guide");
 let board_pause = document.querySelector(".board_pause");
 let board_lose = document.querySelector(".board_lose");
 let board_win = document.querySelector(".board_win");
+let board_level_complete = document.querySelector(".board_level_complete");
+let completedLevel = document.querySelector(".completedLevel");
+let next_level_button = document.querySelector(".next_level_button");
 let btnClose = board_guide.querySelector("button");
 let opacity_bgk = document.querySelector(".opacity_bgk");
 let opacity_bgk1 = document.querySelector(".opacity_bgk1");
@@ -319,6 +378,52 @@ function help() {
     }
   }
   reRenderBoardIMG();
+}
+
+function hasAvailableMove() {
+  const remainingCells = Array.from(cells).filter(
+    (cell) => cell.style.visibility !== "hidden"
+  );
+
+  for (let firstIndex = 0; firstIndex < remainingCells.length - 1; firstIndex++) {
+    for (
+      let secondIndex = firstIndex + 1;
+      secondIndex < remainingCells.length;
+      secondIndex++
+    ) {
+      const firstCell = remainingCells[firstIndex];
+      const secondCell = remainingCells[secondIndex];
+      if (firstCell.style.backgroundImage !== secondCell.style.backgroundImage) {
+        continue;
+      }
+
+      const firstId = parseInt(firstCell.getAttribute("id"), 10) - 1;
+      const secondId = parseInt(secondCell.getAttribute("id"), 10) - 1;
+      const firstPosition = [
+        Math.floor(firstId / numCols) + 1,
+        (firstId % numCols) + 1,
+      ];
+      const secondPosition = [
+        Math.floor(secondId / numCols) + 1,
+        (secondId % numCols) + 1,
+      ];
+
+      if (findPath(...firstPosition, ...secondPosition) !== null) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function shuffleIfNoAvailableMove() {
+  const remainingCells = Array.from(cells).filter(
+    (cell) => cell.style.visibility !== "hidden"
+  );
+  if (remainingCells.length > 0 && !hasAvailableMove()) {
+    reRenderBoardIMG();
+  }
 }
 // hàm thay đổi trạng thái khi click reload board khi đủ điều kiện
 function canReload() {
@@ -454,6 +559,7 @@ function hideAllLevelGuides() {
 }
 
 function initializeBoardForCurrentLevel() {
+  rebuildBoardForLevel(parseInt(currentLevel, 10) || 1);
   const levelType = getLevelType();
   hideAllLevelGuides();
   countCheckTrue = 0;
@@ -560,6 +666,14 @@ function autoIncreaseLevel() {
     return;
   }
 
+  running = false;
+  completedLevel.textContent = currentLevel;
+  board_level_complete.style.display = "block";
+  opacity_bgk2.style.display = "block";
+}
+
+function advanceToNextLevel() {
+  const nextLevel = parseInt(currentLevel, 10) + 1;
   listBtnLevel.forEach((btn) => btn.classList.remove("choosed"));
   const nextButton = Array.from(listBtnLevel).find(
     (btn) => parseInt(btn.getAttribute("id"), 10) === nextLevel
@@ -574,6 +688,12 @@ function autoIncreaseLevel() {
   setUpNextLevel();
   setListenerFromLevel(currentLevel);
 }
+
+next_level_button.addEventListener("click", function () {
+  board_level_complete.style.display = "none";
+  opacity_bgk2.style.display = "none";
+  advanceToNextLevel();
+});
 
 function checkWinEndGame() {
   victory.play().catch(() => {});
@@ -636,6 +756,7 @@ function handleCellClick(event) {
 
   firstClicked = null;
   autoIncreaseLevel();
+  shuffleIfNoAvailableMove();
 }
 
 // sự kiện click chọn các thẻ
